@@ -1,0 +1,7 @@
+{
+  "original_cert_signature_valid": true,
+  "tampered_byte_position": 512,
+  "tampered_cert_signature_valid": false,
+  "ml_dsa_verification_error_message": "signature verification failed after certificate byte modification",
+  "verdict": "PASS: ML-DSA signature tampering detected"
+}

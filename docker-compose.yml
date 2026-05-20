@@ -1,0 +1,83 @@
+services:
+  verifier-api:
+    build:
+      context: ./backend/verifier-api
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - CRQC_MEDIAN_YEAR=2038
+      - CRQC_SPREAD_YEARS=5
+
+  dashboard:
+    build:
+      context: ./frontend/dashboard
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - verifier-api
+
+  ca:
+    build:
+      context: ./backend/ca
+    volumes:
+      - ./certs:/app/certs
+
+  metrics:
+    build:
+      context: ./backend/metrics
+    ports:
+      - "9090:9090"
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - verifier-api
+      - metrics
+
+  server-pqc:
+    build:
+      context: ./services/server-pqc
+    ports:
+      - "8443:8443"
+      - "8444:8444"
+      - "8445:8445"
+
+  server-kemtls:
+    build:
+      context: ./services/server-kemtls
+    ports:
+      - "8446:8446"
+
+  server-ssh:
+    build:
+      context: ./services/server-ssh
+    ports:
+      - "2222:22"
+      - "8447:8447"
+    environment:
+      - CIRCL_ENABLED=${CIRCL_ENABLED:-false}
+
+  client-measurement:
+    build:
+      context: ./services/client-measurement
+    profiles:
+      - tools
+    depends_on:
+      - server-pqc
+      - server-kemtls
+
+  vpn-node:
+    image: alpine:3.20
+    command: ["sh", "-c", "echo 'StrongSwan/OQS native image required for live VPN mode'; sleep infinity"]
+    ports:
+      - "500:500/udp"
+      - "4500:4500/udp"
+    volumes:
+      - ./infra/vpn:/etc/swanctl/conf.d:ro

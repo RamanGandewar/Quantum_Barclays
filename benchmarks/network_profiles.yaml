@@ -1,0 +1,17 @@
+profiles:
+  - name: local
+    rtt_ms: 10
+    packet_loss_percent: 0
+    bandwidth_mbps: 1000
+  - name: metro
+    rtt_ms: 50
+    packet_loss_percent: 0
+    bandwidth_mbps: 250
+  - name: regional
+    rtt_ms: 100
+    packet_loss_percent: 0.5
+    bandwidth_mbps: 100
+  - name: stressed
+    rtt_ms: 200
+    packet_loss_percent: 1
+    bandwidth_mbps: 25

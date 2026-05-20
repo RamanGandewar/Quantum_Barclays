@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+dist/
+build/
+coverage/
+certs/
+certs-demo/
+*.key
+*.pem
+*.crt
+*.csr
+*.log
+.env
+.DS_Store

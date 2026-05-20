@@ -1,0 +1,99 @@
+{
+  "run_id": "152950c8-0e7f-48d6-bfa9-a523b31bf272",
+  "timestamp": "2026-05-20T08:47:33.109445+00:00",
+  "network_profile": {
+    "rtt_ms": 100,
+    "bandwidth_mbps": 10,
+    "packet_loss_pct": 1.0
+  },
+  "results": [
+    {
+      "mode": "classical",
+      "runs": 5,
+      "handshake_bytes": {
+        "client_hello_key_share": 32,
+        "server_hello_key_share": 32,
+        "certificate_chain": 3000,
+        "certificate_verify": 64,
+        "finished": 52,
+        "total": 5200
+      },
+      "latency_ms": {
+        "mean": 13.2,
+        "p50": 13.2,
+        "p95": 14.0,
+        "p99": 14.0,
+        "min": 12.4,
+        "max": 14.0
+      },
+      "migration_state": "S0_CLASSICAL",
+      "hndl_risk_score": 0.87
+    },
+    {
+      "mode": "hybrid",
+      "runs": 5,
+      "handshake_bytes": {
+        "client_hello_key_share": 1216,
+        "server_hello_key_share": 1120,
+        "certificate_chain": 13200,
+        "certificate_verify": 3293,
+        "finished": 52,
+        "total": 18400
+      },
+      "latency_ms": {
+        "mean": 19.6,
+        "p50": 19.6,
+        "p95": 20.4,
+        "p99": 20.4,
+        "min": 18.8,
+        "max": 20.4
+      },
+      "migration_state": "S3_HYBRID_FULL",
+      "hndl_risk_score": 0.17
+    },
+    {
+      "mode": "pqc-native",
+      "runs": 5,
+      "handshake_bytes": {
+        "client_hello_key_share": 1184,
+        "server_hello_key_share": 1088,
+        "certificate_chain": 13200,
+        "certificate_verify": 3293,
+        "finished": 52,
+        "total": 18100
+      },
+      "latency_ms": {
+        "mean": 20.9,
+        "p50": 20.9,
+        "p95": 21.7,
+        "p99": 21.7,
+        "min": 20.1,
+        "max": 21.7
+      },
+      "migration_state": "S4_PQC_NATIVE",
+      "hndl_risk_score": 0.0
+    },
+    {
+      "mode": "kemtls",
+      "runs": 5,
+      "handshake_bytes": {
+        "client_hello_key_share": 1184,
+        "server_hello_key_share": 1088,
+        "certificate_chain": 11800,
+        "certificate_verify": 0,
+        "finished": 52,
+        "total": 15800
+      },
+      "latency_ms": {
+        "mean": 23.3,
+        "p50": 23.3,
+        "p95": 24.1,
+        "p99": 24.1,
+        "min": 22.5,
+        "max": 24.1
+      },
+      "migration_state": "S4_PQC_NATIVE",
+      "hndl_risk_score": 0.0
+    }
+  ]
+}

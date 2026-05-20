@@ -1,0 +1,16 @@
+{
+  "classical_session_key_share_bytes_captured": 64,
+  "ecdlp_simulation_result_on_test_curve": {
+    "modulus": 1019,
+    "generator": 2,
+    "captured_public_key": 524,
+    "recovered_private_key": 137,
+    "session_key_recovered": true
+  },
+  "pqc_session_key_share_bytes_captured": 2272,
+  "mlwe_attack_result": {
+    "session_key_recovered": false,
+    "reason": "ML-KEM capture does not expose a discrete-log style recovery path."
+  },
+  "verdict": "PASS: PQC session resists HNDL attack"
+}

@@ -1,0 +1,8 @@
+{
+  "byte_offset_modified": 42,
+  "original_byte_value": 170,
+  "modified_byte_value": 171,
+  "tls_alert_received": "bad_record_mac",
+  "alert_code": 20,
+  "verdict": "PASS: AEAD authentication failure detected"
+}

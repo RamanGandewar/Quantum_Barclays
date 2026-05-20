@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r backend/verifier-api/requirements-dev.txt
+      - run: black --check backend benchmarks demos
+      - run: ruff check backend benchmarks demos
+      - run: pytest backend/verifier-api/tests
+
+  go:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - services/server-pqc
+          - services/server-kemtls
+          - services/server-ssh
+          - services/client-measurement
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - working-directory: ${{ matrix.service }}
+        run: gofmt -w .
+      - working-directory: ${{ matrix.service }}
+        run: test -z "$(git diff -- .)"
+      - working-directory: ${{ matrix.service }}
+        run: go vet ./...
+      - working-directory: ${{ matrix.service }}
+        run: go build ./...
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - working-directory: frontend/dashboard
+        run: npm ci
+      - working-directory: frontend/dashboard
+        run: npm run build

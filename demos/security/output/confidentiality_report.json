@@ -1,0 +1,7 @@
+{
+  "profile_used": "pqc-native",
+  "captured_packet_count": 24,
+  "ciphertext_bytes_visible": 8192,
+  "plaintext_bytes_visible": 0,
+  "verdict": "PASS: No plaintext visible in PQC session"
+}
