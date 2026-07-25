@@ -1,0 +1,155 @@
+# Quantum-Secure Communication System — Roadmap
+
+> **Goal:** A working system where Barclays stakeholders can see, interact with, and verify how secure the communication infrastructure is — covering confidentiality, authenticity, integrity, and harvest-now-decrypt-later (HNDL) risk detection.
+
+---
+
+## Current State (v0.1.0)
+
+The system is **fully functional in demo mode**. All 10 API endpoints, the React dashboard, 4 Go telemetry services, security demos, benchmarks, Docker Compose orchestration, and CI pipeline are complete and working.
+
+**What "demo mode" means:** Telemetry is deterministic/simulated. No real post-quantum cryptographic handshakes occur. The architecture, state machine, risk scoring, and dashboard rendering are all real and production-ready — they just consume synthetic data instead of live crypto probes.
+
+---
+
+## What's Done
+
+| Area | Status |
+|---|---|
+| Verifier API (10 endpoints) | Done |
+| SMSM State Machine (S0–S4) | Done |
+| HNDL Risk Scorer with configurable data classes | Done |
+| React Dashboard (KPI, risk gauge, state diagram, latency charts, evidence table) | Done |
+| Go PQC TLS / KEMTLS / SSH telemetry servers (demo profiles) | Done |
+| Go latency measurement client | Done |
+| Security demos (confidentiality, authenticity, integrity, HNDL attack sim) | Done |
+| Benchmark runner with live flag | Done |
+| Docker Compose (10 services) | Done |
+| CI pipeline (Python lint/test, Go vet/build, frontend build) | Done |
+| Full documentation (architecture, API, research notes, limitations, PRD traceability) | Done |
+| Adapter pattern for native mode switching | Done |
+
+---
+
+## What Remains
+
+### Phase 1 — Native Crypto Adapter (Critical)
+
+This is the single biggest gap. Without it, nothing runs real post-quantum cryptography.
+
+| Task | How | Priority |
+|---|---|---|
+| Implement `NativeScanner` in `backend/verifier-api/app/adapters/native.py` | Use `oqs-python` (liboqs wrapper) to probe actual TLS handshakes for ML-KEM-768, ML-DSA-65. Fill in the 4 stub methods: `scan()`, `get_cert_chain()`, `get_kex_info()`, `is_available()`. | **High** |
+| Add real PQC SSH algorithms to `services/server-ssh/` | Use `oqs-go` or wait for upstream Go `crypto/ssh` to support ML-KEM KEX and ML-DSA host keys. Update `main.go` and `telemetry.go` to detect actual algorithm negotiation. | **High** |
+| Generate real ML-DSA certificates in `backend/ca/generate_pki.py` | Install `liboqs` + `oqs-provider` for OpenSSL. Generate Root (ML-DSA-87) → Intermediate (ML-DSA-65) → Leaf (ML-DSA-44) chain. Replace the JSON manifest with real `.pem` files. | **High** |
+| Wire `NativeScanner` into the factory | `adapters/factory.py` already switches on `PQC_MODE=native` — just needs the adapter to not raise `NotImplementedError`. | **High** |
+
+### Phase 2 — Real-Time Detection Dashboard
+
+The dashboard currently shows static comparison data. For Barclays to "detect" security in real time:
+
+| Task | How | Priority |
+|---|---|---|
+| Live scan polling | Add a `/scan/live` SSE or WebSocket endpoint to the verifier API that streams periodic scans. Frontend subscribes and updates KPI panels in real time. | **High** |
+| Threat detection alerts | Build alert rules in Prometheus + Alertmanager for high HNDL risk scores (`risk > 0.7`). Add notification webhook to Slack/email. | **Medium** |
+| Connection evidence live feed | Replace the static connections table with live data from `server-pqc`, `server-kemtls`, and `server-ssh` telemetry endpoints. | **Medium** |
+| Certificate chain validation view | Real-time OCSP-equivalent check against the CA. Show certificate expiry, chain trust status, algorithm strength per certificate. | **Medium** |
+
+### Phase 3 — End-to-End Proof of Security
+
+For Barclays to trust the system, they need to see it actually defend against attacks:
+
+| Task | How | Priority |
+|---|---|---|
+| Live HNDL attack simulation | Connect `demos/security/hndl_attack_sim.py` to real network traffic instead of toy modulus. Show real key exchange, then demonstrate resistance. | **High** |
+| Tamper detection demo | Run `authenticity_demo.py` against a live TLS connection with actual ML-DSA signatures. Show the tamper being detected in the dashboard. | **High** |
+| Replay attack demo | Run `integrity_replay_demo.py` against a live AEAD session. Show nonce reuse detection and connection termination. | **Medium** |
+| Confidentiality under quantum attack | Simulate Shor's algorithm on classical key exchange (small example) vs. ML-KEM resistance. Visualize in dashboard. | **Medium** |
+
+### Phase 4 — Testing & Hardening
+
+| Task | How | Priority |
+|---|---|---|
+| Unit tests for `risk.py` and `state_machine.py` | Add pytest cases covering edge cases: boundary risk scores, invalid transitions, unknown data classes. | **High** |
+| Unit tests for Go services | Add `*_test.go` files for `server-pqc`, `server-kemtls`, `server-ssh`, `client-measurement`. Test HTTP handlers, mode switching, latency calculations. | **High** |
+| Frontend tests | Add Vitest or Jest. Test dashboard rendering, API data mapping, state diagram generation. | **Medium** |
+| E2E test infrastructure | Create `tests/e2e/package.json` with Playwright dependency. Add `playwright.config.ts`. Implement the 5 scenarios in `tests/e2e/README.md`. | **Medium** |
+| Fuzz the verifier API | Use `atheris` or `hypothesis` to fuzz API inputs — invalid ports, malformed risk requests, boundary migration states. | **Low** |
+
+### Phase 5 — Production Readiness
+
+| Task | How | Priority |
+|---|---|---|
+| Persistent scan history | Add PostgreSQL or SQLite. Store scan results with timestamps. Add `/history` endpoint for trend analysis. | **Medium** |
+| Authentication & RBAC | Add OAuth2/JWT auth to the verifier API. Differentiate Barclays viewer vs. admin roles. | **Medium** |
+| Nginx reverse proxy | Wire `infra/nginx/nginx.conf` into `docker-compose.yml`. Add TLS termination, rate limiting, access logging. | **Medium** |
+| VPN node with real StrongSwan | Replace `sleep infinity` with actual StrongSwan container. Test IKEv2 with ML-KEM-768 + ML-DSA-65 proposal. | **Low** |
+| License file | Add organization-approved license before any public/external sharing. | **High** |
+| Alert rules & monitoring | Complete Prometheus alerting rules. Add Grafana dashboard for operational metrics. | **Low** |
+| Remove unused dependencies | Drop `d3` and `axios` from `frontend/dashboard/package.json` if not needed. Consume `network_profiles.yaml` in benchmark runner or remove it. | **Low** |
+
+---
+
+## How to Demo This to Barclays
+
+### Current Demo Script (works today)
+
+```bash
+# 1. Start everything
+docker-compose up --build -d
+
+# 2. Open dashboard
+#    http://localhost:3000
+
+# 3. Show the 5 KPI panels — system health, migration state, risk level
+# 4. Click profile buttons — Classical vs Hybrid vs PQC-Native vs KEMTLS
+# 5. Show handshake comparison bar chart — byte overhead visualization
+# 6. Adjust data class + lifetime slider — watch HNDL risk score change
+# 7. Show state machine diagram — S0 → S1 → S2 → S3 → S4 transitions
+# 8. Run a scan
+curl -X POST http://localhost:8000/scan -H 'Content-Type: application/json' -d '{"port": 8443}'
+
+# 9. Run security demos
+cd demos/security
+python confidentiality_demo.py
+python hndl_attack_sim.py
+
+# 10. Show benchmark results
+cat benchmarks/results/latest.json
+```
+
+### Enhanced Demo (after Phase 1–2)
+
+```bash
+# Real PQC handshake detection
+PQC_MODE=native docker-compose up --build -d
+
+# Dashboard now shows live ML-KEM-768 vs classical ECDHE comparison
+# with real timing data, real certificate chains, real algorithm detection
+```
+
+---
+
+## Recommended Execution Order
+
+```
+Week 1-2:  Phase 1 (Native Crypto Adapter) — this unlocks everything else
+Week 3-4:  Phase 2 (Real-Time Detection) — makes the demo interactive
+Week 5-6:  Phase 3 (Attack Simulations) — proves the security claims
+Week 7-8:  Phase 4 (Testing) — hardens for stakeholder confidence
+Week 9+:   Phase 5 (Production) — only if deploying beyond demo
+```
+
+**Minimum viable demo for Barclays:** Phase 1 + Phase 2 gives a working system where they can see real post-quantum algorithms being detected and scored in real time.
+
+---
+
+## Key Files to Modify
+
+| Phase | Files |
+|---|---|
+| Phase 1 | `backend/verifier-api/app/adapters/native.py`, `backend/ca/generate_pki.py`, `services/server-ssh/main.go` |
+| Phase 2 | `backend/verifier-api/app/main.py` (SSE endpoint), `frontend/dashboard/src/main.tsx` (live polling) |
+| Phase 3 | `demos/security/*.py` (wire to live services), `frontend/dashboard/src/main.tsx` (attack viz) |
+| Phase 4 | `backend/verifier-api/tests/`, `services/*/` (Go tests), `tests/e2e/` |
+| Phase 5 | `docker-compose.yml`, `infra/nginx/nginx.conf`, new `backend/verifier-api/app/db.py` |
