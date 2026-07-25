@@ -297,7 +297,7 @@ Return contract:
 `benchmarks/run_benchmarks.py` writes `benchmarks/results/latest.json`.
 
 ```json
-{
+{   
   "run_id": "uuid-string",
   "timestamp": "ISO-8601",
   "network_profile": {
