@@ -21,6 +21,12 @@
 | 10 | **Phase 4 Step 1 — Backend unit tests (75 tests)** | Prajwal + AI | Jul 26, 2026 | Added test_risk.py (18 tests: crqc_probability, risk_band, recommended_action, compute_risk edge cases), test_state_machine.py (23 tests: classify_evidence, next_state, build_recommendations, migration_plan, verify_transition, data integrity), test_live.py (10 tests: parse_targets, subscribe/unsubscribe, broadcast). All 75 tests passing. |
 | 11 | **Phase 4 Step 2 — Go unit tests** | Prajwal + AI | Jul 26, 2026 | Added main_test.go for server-pqc (4 tests: handler response, 404, content-type, profile fields), server-ssh (4 tests: mode profiles, JSON serialization, telemetry endpoint, SSH config), server-kemtls (2 tests: session-info, handshake bytes). Go not installed on host — tests created and ready to run. |
 | 12 | **Phase 4 Step 3 — Playwright E2E config + tests** | Prajwal + AI | Jul 26, 2026 | Created tests/e2e/package.json, playwright.config.ts, expanded dashboard.spec.ts to 7 tests (PRD views, toolbar buttons, KPI panels, risk controls, live indicator, state machine SVG, API docs). |
+| 13 | **Phase 5 Step 1 — SQLite scan history** | Prajwal + AI | Jul 27, 2026 | New app/db.py: SQLite persistence for scan results with timestamps, auto-trim to 5000 rows, lazy-init. GET /history endpoint returns scans + stats (total_scans, tracked_endpoints, latest_scan). LiveScanner stores every scan to DB after broadcast. Docker volume mount for persistence. 76 tests passing. |
+| 14 | **Phase 5 Step 2 — Nginx reverse proxy** | Prajwal + AI | Jul 27, 2026 | Updated infra/nginx/nginx.conf: /api/ proxy to verifier-api, SSE support (proxy_buffering off), gzip compression, try_files SPA fallback. Added nginx service to docker-compose.yml on port 80. |
+| 15 | **Phase 5 Step 3 — Frontend dependency cleanup** | Prajwal + AI | Jul 27, 2026 | Removed unused d3, axios, @types/d3 from frontend/dashboard/package.json (3 deps, ~150KB). Confirmed no imports in codebase. |
+| 16 | **Phase 5 Step 4 — MIT License** | Prajwal + AI | Jul 27, 2026 | Added MIT license file at project root. |
+| 17 | **Phase 5 Step 5 — Simple API key auth** | Prajwal + AI | Jul 27, 2026 | New app/deps.py with verify_api_key dependency. Optional API_KEY env var gates mutating POST endpoints (/scan, /risk-score, /migration-plan, /verify-transition). GET endpoints stay open. Bypassed when API_KEY unset for demo friendliness. 76 tests passing. |
+| 18 | **Phase 5 Step 6 — Prometheus alert rules** | Prajwal + AI | Jul 27, 2026 | New infra/prometheus/alerts.yml: 4 rules — VerifierAPIDown (critical, 30s), HighScanFailureRate (warning, 5m), HighScanLatency p95>10s (warning, 5m), MetricsCollectorDown (warning, 1m). Mounted in docker-compose. |
 
 ---
 
@@ -30,8 +36,8 @@
 |-------|---------------|--------|
 | Phase 2 — Real-Time Detection Dashboard | Week 3-4 | Done (Steps 1-2) |
 | Phase 3 — End-to-End Proof of Security | Week 5-6 | Deferred (demos are standalone report generators, making them live requires major effort) |
-| Phase 4 — Testing & Hardening | Week 7-8 | Done (75 Python tests, Go tests, Playwright E2E) |
-| Phase 5 — Production Readiness | Week 9+ | Pending |
+| Phase 4 — Testing & Hardening | Week 7-8 | Done (76 Python tests, Go tests, Playwright E2E) |
+| Phase 5 — Production Readiness | Week 9+ | In Progress (history, Nginx, cleanup, license, auth, alerts done; VPN pending) |
 
 ---
 

@@ -73,6 +73,17 @@ def test_prd_supporting_endpoints_exist():
         "/connections",
         "/state-machine",
         "/metrics",
+        "/history",
     ]:
         response = client.get(path)
         assert response.status_code == 200
+
+
+def test_history_returns_stats():
+    response = client.get("/history")
+    data = response.json()
+    assert "scans" in data
+    assert "stats" in data
+    assert isinstance(data["scans"], list)
+    assert "total_scans" in data["stats"]
+    assert "tracked_endpoints" in data["stats"]

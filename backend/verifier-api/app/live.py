@@ -13,6 +13,7 @@ import os
 from typing import Any
 
 from app.adapters.factory import build_scanner
+from app.db import store_scan
 from app.state_machine import STATE_LABELS, build_recommendations
 
 LOGGER = logging.getLogger(__name__)
@@ -121,6 +122,10 @@ class LiveScanner:
                 self._latest[result["endpoint"]] = result
                 payload = json.dumps(result, default=str)
                 self._broadcast(payload)
+                try:
+                    store_scan(result)
+                except Exception:
+                    LOGGER.exception("Failed to store scan result for %s", result.get("endpoint"))
             await asyncio.sleep(_SCAN_INTERVAL)
 
     def start(self) -> None:

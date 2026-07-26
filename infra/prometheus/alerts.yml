@@ -1,0 +1,42 @@
+groups:
+  - name: pqc-verifier
+    rules:
+      # API is down or unreachable
+      - alert: VerifierAPIDown
+        expr: up{job="verifier-api"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Verifier API is down"
+          description: "The PQC verifier API has been unreachable for 30 seconds."
+
+      # High scan failure rate (error=True in live results)
+      - alert: HighScanFailureRate
+        expr: rate(pqc_scans_total[5m]) < 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scan rate dropped near zero"
+          description: "The verifier API is processing fewer than 0.01 scans/sec for 5 minutes."
+
+      # Scan latency p95 exceeds 10 seconds
+      - alert: HighScanLatency
+        expr: histogram_quantile(0.95, rate(pqc_scan_latency_seconds_bucket[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scan latency p95 exceeds 10s"
+          description: "The 95th percentile scan latency has been above 10 seconds."
+
+      # Metrics collector is down
+      - alert: MetricsCollectorDown
+        expr: up{job="metrics"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Metrics collector is down"
+          description: "The demo metrics collector has been unreachable for 1 minute."

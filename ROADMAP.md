@@ -84,17 +84,20 @@ For Barclays to trust the system, they need to see it actually defend against at
 | Frontend unit tests (Vitest) | Deferred — minimal frontend code, low ROI |
 | Fuzz the verifier API | Deferred — low priority |
 
-### Phase 5 — Production Readiness
+### Phase 5 — Production Readiness (In Progress)
+
+**Partial completion Jul 27, 2026.** SQLite history, Nginx proxy, dependency cleanup done.
 
 | Task | How | Priority |
 |---|---|---|
-| Persistent scan history | Add PostgreSQL or SQLite. Store scan results with timestamps. Add `/history` endpoint for trend analysis. | **Medium** |
-| Authentication & RBAC | Add OAuth2/JWT auth to the verifier API. Differentiate Barclays viewer vs. admin roles. | **Medium** |
-| Nginx reverse proxy | Wire `infra/nginx/nginx.conf` into `docker-compose.yml`. Add TLS termination, rate limiting, access logging. | **Medium** |
+| Persistent scan history | ✅ Done — SQLite `app/db.py`, stores every scan result with timestamp, `GET /history?limit=&endpoint=` endpoint with stats, auto-trims to 5000 rows, Docker volume mount for persistence. | **Medium** |
+| Nginx reverse proxy | ✅ Done — `infra/nginx/nginx.conf` with `/api/` proxy, SSE support (`proxy_buffering off`), gzip, `docker-compose.yml` nginx service on port 80. | **Medium** |
+| Remove unused dependencies | ✅ Done — dropped `d3`, `axios`, `@types/d3` from frontend `package.json`. | **Low** |
+| License file | ✅ Done — MIT license added. | **High** |
+| Simple API key auth | ✅ Done — Optional `API_KEY` env var gates mutating POST endpoints (`/scan`, `/risk-score`, `/migration-plan`, `/verify-transition`). GET endpoints remain open. Bypassed when `API_KEY` is unset (demo-friendly). | **Medium** |
+| Prometheus alert rules | ✅ Done — `alerts.yml` with 4 rules: VerifierAPIDown (critical), HighScanFailureRate (warning), HighScanLatency p95>10s (warning), MetricsCollectorDown (warning). | **Low** |
 | VPN node with real StrongSwan | Replace `sleep infinity` with actual StrongSwan container. Test IKEv2 with ML-KEM-768 + ML-DSA-65 proposal. | **Low** |
-| License file | Add organization-approved license before any public/external sharing. | **High** |
 | Alert rules & monitoring | Complete Prometheus alerting rules. Add Grafana dashboard for operational metrics. | **Low** |
-| Remove unused dependencies | Drop `d3` and `axios` from `frontend/dashboard/package.json` if not needed. Consume `network_profiles.yaml` in benchmark runner or remove it. | **Low** |
 
 ---
 

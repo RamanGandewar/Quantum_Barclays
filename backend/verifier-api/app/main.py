@@ -1,11 +1,13 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from starlette.responses import Response, StreamingResponse
 
+from app.db import get_history, get_history_stats, init_db
+from app.deps import verify_api_key
 from app.live import LIVE_SCANNER
 from app.models import (
     MigrationPlanRequest,
@@ -29,6 +31,7 @@ from app.telemetry import (
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
+    init_db()
     LIVE_SCANNER.start()
     yield
     LIVE_SCANNER.stop()
@@ -75,6 +78,13 @@ def connections() -> list[dict]:
     return live if live else []
 
 
+@app.get("/history")
+def history(limit: int = 100, endpoint: str | None = None) -> dict:
+    scans = get_history(limit=min(limit, 500), endpoint=endpoint)
+    stats = get_history_stats()
+    return {"scans": scans, "stats": stats}
+
+
 @app.get("/scan/live")
 async def scan_live():
     queue = LIVE_SCANNER.subscribe()
@@ -107,7 +117,7 @@ def state_machine() -> dict:
 
 
 @app.post("/scan", response_model=ScanResponse)
-def scan(request: ScanRequest) -> ScanResponse:
+def scan(request: ScanRequest, _: None = Depends(verify_api_key)) -> ScanResponse:
     SCAN_COUNTER.inc()
     with SCAN_LATENCY.time():
         result = scan_endpoint(request)
@@ -121,7 +131,7 @@ def scan(request: ScanRequest) -> ScanResponse:
 
 
 @app.post("/risk-score", response_model=RiskScoreResponse)
-def risk_score(request: RiskScoreRequest) -> RiskScoreResponse:
+def risk_score(request: RiskScoreRequest, _: None = Depends(verify_api_key)) -> RiskScoreResponse:
     RISK_COUNTER.inc()
     result = compute_risk(
         state=request.state,
@@ -138,7 +148,7 @@ def risk_score(request: RiskScoreRequest) -> RiskScoreResponse:
 
 
 @app.post("/migration-plan", response_model=MigrationPlanResponse)
-def plan(request: MigrationPlanRequest) -> MigrationPlanResponse:
+def plan(request: MigrationPlanRequest, _: None = Depends(verify_api_key)) -> MigrationPlanResponse:
     result = migration_plan(request.current_state, request.target_state)
     return MigrationPlanResponse(current_state=request.current_state, **result)
 
@@ -146,6 +156,7 @@ def plan(request: MigrationPlanRequest) -> MigrationPlanResponse:
 @app.post("/verify-transition", response_model=TransitionVerificationResponse)
 def transition(
     request: TransitionVerificationRequest,
+    _: None = Depends(verify_api_key),
 ) -> TransitionVerificationResponse:
     allowed, missing = verify_transition(
         request.current_state, request.target_state, request.evidence
