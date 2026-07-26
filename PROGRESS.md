@@ -10,7 +10,8 @@
 | # | What | Who | When | Notes |
 |---|------|-----|------|-------|
 | 1 | **Phase 0 — Demo Mode (v0.1.0)** | Team (pre-existing) | Before Jul 2026 | Full working demo: 10 API endpoints, React dashboard, 4 Go services, security demos, benchmarks, Docker Compose, CI pipeline. All telemetry is deterministic/simulated. |
-| 2 | **Roadmap + Progress tracking created** | Prajwal + AI | Jul 26, 2025 | ROADMAP.md finalized, PROGRESS.md created. Starting Phase 1. |
+| 2 | **Roadmap + Progress tracking created** | Prajwal + AI | Jul 26, 2026 | ROADMAP.md finalized, PROGRESS.md created. Starting Phase 1. |
+| 3 | **Phase 1 Step 1 — Native crypto deps installed (WSL)** | Prajwal + AI | Jul 26, 2026 | liboqs (ML-KEM+ML-DSA), oqs-provider 0.12.0-dev, OpenSSL OQS config, liboqs-python, ML-DSA cert generation verified. All in WSL Ubuntu at /home/pb/oqs-install/. |
 
 ---
 
@@ -18,7 +19,7 @@
 
 | # | What | Who | Started | Status |
 |---|------|-----|---------|--------|
-| — | **Phase 1 — Native Crypto Adapter** | — | — | Starting now |
+| — | **Phase 1 Step 2 — Implement NativeScanner** | — | — | Starting now |
 
 ---
 
