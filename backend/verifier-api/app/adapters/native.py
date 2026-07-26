@@ -60,7 +60,9 @@ def _find_openssl() -> str:
     if custom and Path(custom).exists():
         return custom
     for candidate in (
+        "/usr/bin/openssl",
         "/usr/local/bin/openssl",
+        "/opt/oqs/bin/openssl",
         "/home/pb/oqs-install/bin/openssl",
         "openssl",
     ):
@@ -92,11 +94,13 @@ def _run_s_client(
         "-brief",
     ]
     env = os.environ.copy()
-    oqs_conf = os.getenv("OPENSSL_CONF", "/home/pb/oqs-install/openssl.cnf")
+    oqs_conf = os.getenv("OPENSSL_CONF", "/opt/oqs/openssl.cnf")
+    if not Path(oqs_conf).exists():
+        oqs_conf = os.getenv("OPENSSL_CONF", "/home/pb/oqs-install/openssl.cnf")
     if Path(oqs_conf).exists():
         env["OPENSSL_CONF"] = oqs_conf
     ld_path = env.get("LD_LIBRARY_PATH", "")
-    for p in ("/home/pb/oqs-install/lib", "/usr/local/lib"):
+    for p in ("/opt/oqs/lib", "/home/pb/oqs-install/lib", "/usr/local/lib"):
         if p not in ld_path:
             ld_path = f"{p}:{ld_path}" if ld_path else p
     env["LD_LIBRARY_PATH"] = ld_path
@@ -136,11 +140,13 @@ def _run_s_client_full(
         f"{hostname}:{port}",
     ]
     env = os.environ.copy()
-    oqs_conf = os.getenv("OPENSSL_CONF", "/home/pb/oqs-install/openssl.cnf")
+    oqs_conf = os.getenv("OPENSSL_CONF", "/opt/oqs/openssl.cnf")
+    if not Path(oqs_conf).exists():
+        oqs_conf = os.getenv("OPENSSL_CONF", "/home/pb/oqs-install/openssl.cnf")
     if Path(oqs_conf).exists():
         env["OPENSSL_CONF"] = oqs_conf
     ld_path = env.get("LD_LIBRARY_PATH", "")
-    for p in ("/home/pb/oqs-install/lib", "/usr/local/lib"):
+    for p in ("/opt/oqs/lib", "/home/pb/oqs-install/lib", "/usr/local/lib"):
         if p not in ld_path:
             ld_path = f"{p}:{ld_path}" if ld_path else p
     env["LD_LIBRARY_PATH"] = ld_path
@@ -434,19 +440,17 @@ class NativeScanner(BaseScanner):
             return True
         if os.getenv("OQS_PROVIDER_AVAILABLE", "").lower() == "true":
             return True
-        oqs_conf = Path(
-            os.getenv("OPENSSL_CONF", "/home/pb/oqs-install/openssl.cnf")
-        )
-        if oqs_conf.exists():
-            so_path = oqs_conf.parent / "lib" / "ossl-modules" / "oqsprovider.so"
-            if so_path.exists():
-                return True
+        for conf_dir in ("/opt/oqs", "/home/pb/oqs-install"):
+            oqs_conf = Path(conf_dir) / "openssl.cnf"
+            if oqs_conf.exists():
+                so_path = Path(conf_dir) / "lib" / "ossl-modules" / "oqsprovider.so"
+                if so_path.exists():
+                    return True
         try:
             result = subprocess.run(
                 [_find_openssl(), "list", "-providers"],
                 capture_output=True,
                 timeout=5,
-                env={**os.environ, "OPENSSL_CONF": str(oqs_conf)} if oqs_conf.exists() else None,
             )
             return b"oqs" in result.stdout.lower()
         except (FileNotFoundError, subprocess.TimeoutExpired):

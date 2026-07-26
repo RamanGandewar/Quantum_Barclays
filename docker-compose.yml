@@ -8,6 +8,10 @@ services:
       - APP_ENV=production
       - CRQC_MEDIAN_YEAR=2038
       - CRQC_SPREAD_YEARS=5
+      - PQC_MODE=${PQC_MODE:-native}
+      - OQS_PROVIDER_AVAILABLE=true
+      - OPENSSL_CONF=/opt/oqs/openssl.cnf
+      - LD_LIBRARY_PATH=/opt/oqs/lib
 
   dashboard:
     build:
@@ -22,6 +26,9 @@ services:
   ca:
     build:
       context: ./backend/ca
+    environment:
+      - OPENSSL_CONF=/opt/oqs/openssl.cnf
+      - LD_LIBRARY_PATH=/opt/oqs/lib
     volumes:
       - ./certs:/app/certs
 

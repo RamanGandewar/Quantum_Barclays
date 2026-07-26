@@ -33,16 +33,19 @@ The system is **fully functional in demo mode**. All 10 API endpoints, the React
 
 ## What Remains
 
-### Phase 1 — Native Crypto Adapter (Critical)
+### Phase 1 — Native Crypto Adapter ✅ DONE
 
-This is the single biggest gap. Without it, nothing runs real post-quantum cryptography.
+**Completed Jul 26, 2026.** Full native PQC scanning and ML-DSA certificate generation working end-to-end.
 
-| Task | How | Priority |
-|---|---|---|
-| Implement `NativeScanner` in `backend/verifier-api/app/adapters/native.py` | Use `oqs-python` (liboqs wrapper) to probe actual TLS handshakes for ML-KEM-768, ML-DSA-65. Fill in the 4 stub methods: `scan()`, `get_cert_chain()`, `get_kex_info()`, `is_available()`. | **High** |
-| Add real PQC SSH algorithms to `services/server-ssh/` | Use `oqs-go` or wait for upstream Go `crypto/ssh` to support ML-KEM KEX and ML-DSA host keys. Update `main.go` and `telemetry.go` to detect actual algorithm negotiation. | **High** |
-| Generate real ML-DSA certificates in `backend/ca/generate_pki.py` | Install `liboqs` + `oqs-provider` for OpenSSL. Generate Root (ML-DSA-87) → Intermediate (ML-DSA-65) → Leaf (ML-DSA-44) chain. Replace the JSON manifest with real `.pem` files. | **High** |
-| Wire `NativeScanner` into the factory | `adapters/factory.py` already switches on `PQC_MODE=native` — just needs the adapter to not raise `NotImplementedError`. | **High** |
+| Task | Status |
+|---|---|
+| `NativeScanner` — real TLS probing via `openssl s_client`, parses group/sig/chain/KEX | ✅ Done |
+| Real ML-DSA cert chain generation (Root ML-DSA-87 → Int ML-DSA-65 → Leaf ML-DSA-65) | ✅ Done |
+| Factory wiring (`PQC_MODE=native` env var) | ✅ Done (pre-existing) |
+| Docker multi-stage builds with liboqs + oqs-provider | ✅ Done |
+| End-to-end verification: native scanner classifies google.com as S0_CLASSICAL/ECDSA-P256 | ✅ Done |
+
+Remaining (deferred): real PQC SSH algorithms in Go server (Phase 5, depends on Go upstream support).
 
 ### Phase 2 — Real-Time Detection Dashboard
 
@@ -121,11 +124,16 @@ cat benchmarks/results/latest.json
 ### Enhanced Demo (after Phase 1–2)
 
 ```bash
-# Real PQC handshake detection
+# Phase 1 COMPLETE: Real PQC handshake detection
 PQC_MODE=native docker-compose up --build -d
 
-# Dashboard now shows live ML-KEM-768 vs classical ECDHE comparison
-# with real timing data, real certificate chains, real algorithm detection
+# Dashboard shows live ML-KEM-768 vs classical ECDHE comparison
+# with real timing data, real ML-DSA certificate chains, real algorithm detection
+
+# Native scan against any TLS endpoint:
+curl -X POST http://localhost:8000/scan \
+  -H 'Content-Type: application/json' \
+  -d '{"hostname": "google.com", "port": 443, "timeout_seconds": 5}'
 ```
 
 ---
