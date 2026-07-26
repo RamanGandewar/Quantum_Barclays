@@ -16,6 +16,8 @@
 | 5 | **Phase 1 Step 3 — Real ML-DSA certificate chain** | Prajwal + AI | Jul 26, 2026 | Root CA (ML-DSA-87, 10KB) -> Intermediate (ML-DSA-65, 9.6KB) -> Leaf (ML-DSA-65, 7.7KB). Full PQC chain: 27.6KB vs classical 2.2KB. Chain verification passes via openssl verify. Updated generate_pki.py with OQS provider integration. |
 | 6 | **Phase 1 Step 4 — Docker images built & tested** | Prajwal + AI | Jul 26, 2026 | Both Dockerfiles updated with multi-stage liboqs + oqs-provider builds. CA Dockerfile fixed: was copying static liboqs.a instead of shared liboqs.so; added OQS_PROVIDER_AVAILABLE env var. CA image generates real ML-DSA cert chain (Root 10KB, Int 9.5KB, Leaf 7.8KB). Verifier-api image verified: env shows OQS_PROVIDER_AVAILABLE=true, PQC_MODE=native. |
 | 7 | **Phase 1 — End-to-end native PQC verified** | Prajwal + AI | Jul 26, 2026 | docker-compose up --build verifier-api: NativeScanner loaded ("Selected NativeScanner adapter"). POST /scan against google.com:443 returned S0_CLASSICAL/ECDSA-P256 with scanner_mode=native-openssl-oqs. Real OpenSSL TLS negotiation, cert parsing, and state classification working. |
+| 8 | **Phase 2 Step 1 — SSE live scan endpoint** | Prajwal + AI | Jul 26, 2026 | New app/live.py: LiveScanner singleton with background asyncio loop scanning 5 targets every 10s. Per-client asyncio.Queue for SSE broadcast. GET /scan/live streams event:scan\ndata:{json} via StreamingResponse. Lifespan context manager starts/stops scanner on app lifecycle. |
+| 9 | **Phase 2 Step 2 — Frontend live EventSource** | Prajwal + AI | Jul 26, 2026 | main.tsx: EventSource connects to /scan/live, liveConnections state accumulates results by endpoint key. Live Connection Evidence table now shows real-time scan data. Pulsing green "LIVE" / red "OFFLINE" indicator in topbar. CSS pulse animation. Removed unused LiveConnection type, static LIVE_CONNECTIONS fallback. |
 
 ---
 
@@ -23,7 +25,7 @@
 
 | Phase | Target Window | Status |
 |-------|---------------|--------|
-| Phase 2 — Real-Time Detection Dashboard | Week 3-4 | Pending |
+| Phase 2 — Real-Time Detection Dashboard | Week 3-4 | Done (Steps 1-2) |
 | Phase 3 — End-to-End Proof of Security | Week 5-6 | Pending |
 | Phase 4 — Testing & Hardening | Week 7-8 | Pending |
 | Phase 5 — Production Readiness | Week 9+ | Pending |

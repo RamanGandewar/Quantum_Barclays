@@ -47,16 +47,19 @@ The system is **fully functional in demo mode**. All 10 API endpoints, the React
 
 Remaining (deferred): real PQC SSH algorithms in Go server (Phase 5, depends on Go upstream support).
 
-### Phase 2 — Real-Time Detection Dashboard
+### Phase 2 — Real-Time Detection Dashboard ✅ DONE
 
-The dashboard currently shows static comparison data. For Barclays to "detect" security in real time:
+**Completed Jul 26, 2026.** Live SSE scan streaming and real-time dashboard updates working end-to-end.
 
-| Task | How | Priority |
-|---|---|---|
-| Live scan polling | Add a `/scan/live` SSE or WebSocket endpoint to the verifier API that streams periodic scans. Frontend subscribes and updates KPI panels in real time. | **High** |
-| Threat detection alerts | Build alert rules in Prometheus + Alertmanager for high HNDL risk scores (`risk > 0.7`). Add notification webhook to Slack/email. | **Medium** |
-| Connection evidence live feed | Replace the static connections table with live data from `server-pqc`, `server-kemtls`, and `server-ssh` telemetry endpoints. | **Medium** |
-| Certificate chain validation view | Real-time OCSP-equivalent check against the CA. Show certificate expiry, chain trust status, algorithm strength per certificate. | **Medium** |
+| Task | Status |
+|---|---|
+| Live scan polling via SSE (`GET /scan/live`) | ✅ Done |
+| Frontend EventSource with accumulated live state | ✅ Done |
+| Pulsing LIVE/OFFLINE indicator in top bar | ✅ Done |
+| `/connections` returns real scan data (not static) | ✅ Done |
+| Connection evidence live feed | ✅ Done (via live scanner scanning all 5 targets) |
+| Threat detection alerts (Prometheus + Alertmanager) | Deferred to Phase 5 |
+| Certificate chain validation view | Deferred to Phase 5 |
 
 ### Phase 3 — End-to-End Proof of Security
 

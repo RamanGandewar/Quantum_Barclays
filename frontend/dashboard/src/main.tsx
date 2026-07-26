@@ -50,15 +50,6 @@ type ComparisonRow = {
   latency_ms: number;
 };
 
-type LiveConnection = {
-  endpoint: string;
-  state: MigrationState;
-  negotiated_group: string;
-  certificate_algorithm: string;
-  handshake_bytes: number;
-  latency_ms: number;
-};
-
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 const profileButtons = [
@@ -99,7 +90,8 @@ function App() {
   const [scan, setScan] = React.useState<ScanResponse | null>(null);
   const [risk, setRisk] = React.useState<RiskResponse | null>(null);
   const [comparison, setComparison] = React.useState(fallbackComparison);
-  const [connections, setConnections] = React.useState<LiveConnection[]>([]);
+  const [liveConnections, setLiveConnections] = React.useState<Record<string, ScanResponse>>({});
+  const [sseConnected, setSseConnected] = React.useState(false);
   const [sshScan, setSshScan] = React.useState<ScanResponse | null>(null);
   const [dataClass, setDataClass] = React.useState<DataClass>("confidential");
   const [lifetime, setLifetime] = React.useState(30);
@@ -145,9 +137,6 @@ function App() {
         })),
       );
 
-      const connectionResponse = await fetch(`${API_BASE}/connections`, { signal: controller.signal });
-      setConnections(await connectionResponse.json());
-
       const sshResponse = await fetch(`${API_BASE}/scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,6 +151,24 @@ function App() {
     return () => controller.abort();
   }, []);
 
+  React.useEffect(() => {
+    const eventSource = new EventSource(`${API_BASE}/scan/live`);
+    eventSource.addEventListener("scan", (event) => {
+      try {
+        const data: ScanResponse = JSON.parse(event.data);
+        setLiveConnections((prev) => ({ ...prev, [data.endpoint]: data }));
+      } catch {
+        console.error("Failed to parse SSE event:", event.data);
+      }
+    });
+    eventSource.onopen = () => setSseConnected(true);
+    eventSource.onerror = () => setSseConnected(false);
+    return () => {
+      eventSource.close();
+      setSseConnected(false);
+    };
+  }, []);
+
   const currentState = scan?.state ?? "S0_CLASSICAL";
   const activeIndex = ["S0_CLASSICAL", "S1_PQC_READY", "S2_HYBRID_KX", "S3_HYBRID_FULL", "S4_PQC_NATIVE"].indexOf(currentState);
 
@@ -172,9 +179,14 @@ function App() {
           <h1>Post-Quantum Migration Control Plane</h1>
           <p>SMSM verification, HNDL scoring, handshake telemetry, and PQC readiness tracking.</p>
         </div>
-        <div className="status-pill">
-          <ShieldCheck size={18} />
-          {scan?.state_label ?? "Loading"}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span className={`live-dot ${sseConnected ? "connected" : ""}`}>
+            {sseConnected ? "LIVE" : "OFFLINE"}
+          </span>
+          <div className="status-pill">
+            <ShieldCheck size={18} />
+            {scan?.state_label ?? "Loading"}
+          </div>
         </div>
       </header>
 
@@ -323,21 +335,20 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {(connections.length ? connections : scan ? [{
+              {(Object.values(liveConnections).length ? Object.values(liveConnections) : scan ? [{
                 endpoint: scan.endpoint,
                 state: currentState,
-                negotiated_group: scan.evidence.negotiated_group,
-                certificate_algorithm: scan.evidence.certificate_algorithm,
-                handshake_bytes: scan.evidence.handshake_bytes,
-                latency_ms: scan.evidence.latency_ms,
+                state_label: scan.state_label,
+                evidence: scan.evidence,
+                recommendations: scan.recommendations,
               }] : []).map((connection) => (
                 <tr key={connection.endpoint}>
                   <td>{connection.endpoint}</td>
                   <td>{stateShort(connection.state)}</td>
-                  <td>{connection.negotiated_group}</td>
-                  <td>{connection.certificate_algorithm}</td>
-                  <td>{connection.handshake_bytes.toLocaleString()} bytes</td>
-                  <td>{connection.latency_ms.toFixed(1)} ms</td>
+                  <td>{connection.evidence.negotiated_group}</td>
+                  <td>{connection.evidence.certificate_algorithm}</td>
+                  <td>{connection.evidence.handshake_bytes.toLocaleString()} bytes</td>
+                  <td>{connection.evidence.latency_ms.toFixed(1)} ms</td>
                 </tr>
               ))}
             </tbody>
