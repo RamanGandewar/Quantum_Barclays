@@ -32,12 +32,13 @@
 
 ## Upcoming
 
-| Phase | Target Window | Status |
-|-------|---------------|--------|
-| Phase 2 — Real-Time Detection Dashboard | Week 3-4 | Done (Steps 1-2) |
-| Phase 3 — End-to-End Proof of Security | Week 5-6 | Deferred (demos are standalone report generators, making them live requires major effort) |
-| Phase 4 — Testing & Hardening | Week 7-8 | Done (76 Python tests, Go tests, Playwright E2E) |
-| Phase 5 — Production Readiness | Week 9+ | In Progress (history, Nginx, cleanup, license, auth, alerts done; VPN pending) |
+| Phase | Status |
+|-------|--------|
+| Phase 1 — Native PQC Crypto | ✅ Done |
+| Phase 2 — Real-Time Detection | ✅ Done |
+| Phase 3 — Attack Demos | ⏸️ Deferred (standalone scripts, wiring to live TLS requires major effort) |
+| Phase 4 — Testing & Hardening | ✅ Done (76 Python tests, Go tests, Playwright E2E) |
+| Phase 5 — Production Readiness | ✅ Done (history, Nginx, auth, alerts, license, cleanup) |
 
 ---
 
