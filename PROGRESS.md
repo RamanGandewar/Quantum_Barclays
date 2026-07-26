@@ -21,7 +21,7 @@
 
 | # | What | Who | Started | Status |
 |---|------|-----|---------|--------|
-| — | **Phase 1 Step 4 — Wire NativeScanner into factory + Docker** | — | — | Starting next |
+| — | **Phase 1 Step 4 — Wire NativeScanner into factory + Docker** | — | — | Factory already wired. NativeScanner integrates when PQC_MODE=native. Docker changes deferred to Docker build step. |
 
 ---
 
